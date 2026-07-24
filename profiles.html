@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CineMood — Chi sta guardando?</title>
+<meta name="theme-color" content="#090b0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CineMood">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#090b0f;
+  --surface-2:#1c232d;
+  --line:#262f3b;
+  --gold:#e3a857;
+  --text:#f2efe9;
+  --muted:#8a93a3;
+  --red:#c1443a;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:radial-gradient(1200px 600px at 15% -10%, #14202c 0%, var(--bg) 55%) fixed, var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+h1{font-family:'Bebas Neue','Inter',sans-serif;letter-spacing:.03em;font-weight:400;}
+.brandmark{display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Bebas Neue';font-size:22px;color:var(--gold);position:absolute;top:calc(26px + env(safe-area-inset-top));left:0;right:0;}
+.brandmark .dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 12px var(--red);}
+.screen{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:40px;padding:24px;text-align:center;
+}
+.screen h1{font-size:44px;color:var(--gold);margin:0;}
+.screen p{color:var(--muted);margin:0;font-size:14px;}
+.profile-list{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;}
+.profile-card{
+  background:none;border:none;color:var(--text);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  padding:6px;border-radius:16px;transition:transform .18s;font-family:inherit;
+}
+.profile-card:hover{transform:translateY(-4px);}
+.profile-avatar{
+  width:120px;height:120px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue';font-size:52px;
+  border:2px solid transparent;transition:border-color .18s, box-shadow .18s;
+}
+.profile-card:hover .profile-avatar{border-color:var(--gold);box-shadow:0 0 0 4px rgba(227,168,87,.15);}
+.profile-card span.pname{font-size:15px;font-weight:600;color:var(--muted);}
+.profile-card:hover span.pname{color:var(--text);}
+
+/* ---------- SPLASH VIDEO ---------- */
+.splash{
+  position:fixed;inset:0;background:#000;z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .6s ease;
+}
+.splash.fade-out{opacity:0;pointer-events:none;}
+.splash video{width:100%;height:100%;object-fit:cover;}
+.splash-skip{
+  position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));right:20px;z-index:2;
+  background:rgba(255,255,255,.12);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.25);
+  color:#fff;padding:9px 18px;border-radius:999px;font-size:13px;font-weight:700;font-family:inherit;
+}
+
+/* ---------- NUOVO PROFILO ---------- */
+.new-profile-block{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:6px;}
+.new-profile-block .divider{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;}
+.new-profile-form{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.new-profile-form input{
+  background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+  padding:11px 16px;border-radius:999px;font-size:14px;outline:none;min-width:180px;text-align:center;
+}
+.new-profile-form input:focus{border-color:var(--gold);}
+.new-profile-form button{
+  background:var(--gold);color:#161005;border:none;font-weight:800;
+  padding:11px 22px;border-radius:999px;font-size:14px;
+}
+.lang-switch-p{
+  position:absolute;top:calc(24px + env(safe-area-inset-top));right:20px;z-index:5;
+  display:flex;gap:4px;
+}
+.lang-switch-p button{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
+  width:32px;height:32px;font-size:15px;display:flex;align-items:center;justify-content:center;
+  opacity:.55;filter:grayscale(60%);transition:.15s;
+}
+.lang-switch-p button.active{opacity:1;filter:none;border-color:var(--gold);}
+</style>
+</head>
+<body>
+  <div class="splash" id="splash">
+    <video id="introVideo" src="intro.mp4" autoplay muted playsinline></video>
+    <button class="splash-skip" id="splashSkip" type="button" data-i18n="skip">Salta ▸</button>
+  </div>
+
+  <div class="lang-switch-p">
+    <button id="langIt" type="button" title="Italiano">🇮🇹</button>
+    <button id="langEn" type="button" title="English">🇬🇧</button>
+  </div>
+
+  <div class="brandmark"><span class="dot"></span><span>CineMood</span></div>
+  <div class="screen">
+    <div>
+      <h1 data-i18n="title">Chi sta guardando?</h1>
+      <p data-i18n="subtitle">Ogni profilo ha preferiti e titoli visti tutti suoi.</p>
+    </div>
+    <div class="profile-list" id="profileList"></div>
+    <div class="new-profile-block">
+      <span class="divider" data-i18n="or">oppure</span>
+      <div class="new-profile-form">
+        <input id="newProfileName" data-i18n-ph="namePh" placeholder="Scrivi il tuo nome" maxlength="20">
+        <button id="newProfileBtn" type="button" data-i18n="enter">Entra</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const I18N = {
+  it: { title:"Chi sta guardando?", subtitle:"Ogni profilo ha preferiti e titoli visti tutti suoi.", or:"oppure", namePh:"Scrivi il tuo nome", enter:"Entra", skip:"Salta ▸" },
+  en: { title:"Who's watching?", subtitle:"Each profile has its own favorites and watched titles.", or:"or", namePh:"Type your name", enter:"Enter", skip:"Skip ▸" }
+};
+function detectInitialLang(){
+  const saved = localStorage.getItem("cinemood-lang");
+  if(saved==="it"||saved==="en") return saved;
+  const nav = (navigator.language||"it").toLowerCase();
+  return nav.startsWith("it") ? "it" : "en";
+}
+let currentLang = detectInitialLang();
+function applyLang(){
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll("[data-i18n]").forEach(el=> el.textContent = I18N[currentLang][el.dataset.i18n]);
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=> el.placeholder = I18N[currentLang][el.dataset.i18nPh]);
+  document.getElementById("langIt").classList.toggle("active", currentLang==="it");
+  document.getElementById("langEn").classList.toggle("active", currentLang==="en");
+}
+document.getElementById("langIt").addEventListener("click", ()=>{ currentLang="it"; localStorage.setItem("cinemood-lang","it"); applyLang(); });
+document.getElementById("langEn").addEventListener("click", ()=>{ currentLang="en"; localStorage.setItem("cinemood-lang","en"); applyLang(); });
+applyLang();
+
+function endSplash(){
+  const splash = document.getElementById("splash");
+  if(!splash) return;
+  splash.classList.add("fade-out");
+  setTimeout(()=> splash.remove(), 650);
+}
+const introVideo = document.getElementById("introVideo");
+introVideo.addEventListener("ended", endSplash);
+document.getElementById("splashSkip").addEventListener("click", endSplash);
+// se il video non riesce a partire (blocco autoplay, errore), non blocchiamo comunque l'app
+introVideo.addEventListener("error", endSplash);
+setTimeout(endSplash, 12000); // rete di sicurezza nel caso il video non si avvii proprio
+const PROFILES = [
+  { name:"Giuseppe", color:"#4f7cff" },
+  { name:"Ricky",    color:"#e3a857" },
+];
+const list = document.getElementById("profileList");
+PROFILES.forEach(p=>{
+  const btn = document.createElement("button");
+  btn.className = "profile-card";
+  btn.innerHTML = `
+    <span class="profile-avatar" style="background:${p.color}22;color:${p.color};border-color:${p.color}55;">${p.name[0]}</span>
+    <span class="pname">${p.name}</span>
+  `;
+  btn.addEventListener("click", ()=>{
+    location.href = "index.html?profile=" + encodeURIComponent(p.name);
+  });
+  list.appendChild(btn);
+});
+
+function enterCustomProfile(){
+  const name = document.getElementById("newProfileName").value.trim();
+  if(!name) return;
+  location.href = "index.html?profile=" + encodeURIComponent(name);
+}
+document.getElementById("newProfileBtn").addEventListener("click", enterCustomProfile);
+document.getElementById("newProfileName").addEventListener("keydown", e=>{
+  if(e.key==="Enter") enterCustomProfile();
+});
+</script>
+</body>
+</html>
